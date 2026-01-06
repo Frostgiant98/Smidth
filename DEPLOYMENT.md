@@ -107,10 +107,15 @@ For local development with Vercel Blob:
 
 ## Production Considerations
 
-- Receipts are stored in Vercel Blob (cloud storage)
-- Loan data and payments remain in IndexedDB (local storage)
-- PIN hashes remain local-only for security
-- The app works offline for viewing data, but receipt upload requires internet
+- **All data is stored in Vercel Blob** (cloud storage) for cross-device access:
+  - Loan details
+  - Payment records
+  - Receipt images
+  - PIN hash (hashed, never plain text)
+- **User ID**: Generated on first use and stored in localStorage
+- **Cross-device sync**: Data syncs automatically across all devices using the same user ID
+- **Internet required**: The app requires internet connection to load and save data
+- **PIN security**: PINs are hashed client-side before being sent to the server
 
 ## Cost Estimation
 

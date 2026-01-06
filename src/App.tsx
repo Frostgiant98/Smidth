@@ -63,6 +63,15 @@ export default function App() {
       }
     } catch (error) {
       console.error('Failed to load app data:', error);
+      // Show error message but still allow onboarding
+      alert('Failed to load data from cloud. Please check your internet connection.');
+      // Allow user to proceed with onboarding if data fetch fails
+      const pinHash = await getPINHash();
+      if (!pinHash) {
+        setAppView('onboarding-pin');
+      } else {
+        setAppView('onboarding-loan');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -1,58 +1,56 @@
 /**
- * IndexedDB Database Utilities
+ * Cloud Database Utilities
  * 
- * Stores all app data locally using IndexedDB for persistence.
+ * Stores all app data in Vercel Blob (cloud storage) for cross-device access.
  * Handles loan details, payments, and PIN hash.
  */
 
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { AppData, LoanDetails, WeeklyPayment } from '../types';
-
-interface CarTrackerDB extends DBSchema {
-  appData: {
-    key: string;
-    value: AppData;
-  };
-}
-
-const DB_NAME = 'car-installment-tracker';
-const DB_VERSION = 1;
-const STORE_NAME = 'appData';
-
-let dbInstance: IDBPDatabase<CarTrackerDB> | null = null;
+import { getUserId } from './userId';
 
 /**
- * Initialize and return database instance
- */
-export async function getDB(): Promise<IDBPDatabase<CarTrackerDB>> {
-  if (dbInstance) return dbInstance;
-
-  dbInstance = await openDB<CarTrackerDB>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    },
-  });
-
-  return dbInstance;
-}
-
-/**
- * Get all app data
+ * Get all app data from cloud storage
  */
 export async function getAppData(): Promise<AppData | null> {
-  const db = await getDB();
-  const data = await db.get(STORE_NAME, 'data');
-  return data || null;
+  try {
+    const userId = getUserId();
+    const response = await fetch(`/api/data?userId=${encodeURIComponent(userId)}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching app data:', error);
+    // Return null on error (first time user or network issue)
+    return null;
+  }
 }
 
 /**
- * Save app data
+ * Save app data to cloud storage
  */
 export async function saveAppData(data: AppData): Promise<void> {
-  const db = await getDB();
-  await db.put(STORE_NAME, data, 'data');
+  try {
+    const userId = getUserId();
+    const response = await fetch(`/api/data?userId=${encodeURIComponent(userId)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to save data');
+    }
+  } catch (error) {
+    console.error('Error saving app data:', error);
+    throw error;
+  }
 }
 
 /**

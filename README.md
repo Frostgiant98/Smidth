@@ -15,14 +15,15 @@ A mobile-first Progressive Web App (PWA) for tracking weekly Monday-based car in
 
 ### Security
 - **PIN Hashing**: Uses SHA-256 via Web Crypto API (never stores raw PINs)
-- **Local Storage**: All data stored locally using IndexedDB (no backend required)
+- **Cloud Storage**: All data stored in Vercel Blob for cross-device access
 - **PIN Verification**: Required for all protected actions (edits, uploads, deletions)
+- **User ID**: Unique ID stored locally to identify your data in cloud storage
 
 ### User Experience
 - **Mobile-First Design**: Optimized for one-hand usage with large tap targets
 - **Bottom Navigation**: Easy access to Dashboard and Calendar views
 - **Bottom Sheet Modals**: Native-feeling mobile interactions
-- **Offline-First**: Works completely offline, no internet required
+- **Cross-Device Sync**: Access your data from any device with internet connection
 - **PWA Ready**: Installable as a standalone app on mobile devices
 
 ## 🚀 Getting Started

@@ -139,17 +139,22 @@ export default function PaymentBottomSheet({
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this payment?')) return;
 
-    // Get all payments and remove this one
-    const { getAppData, savePayments } = await import('../utils/db');
-    const { recalculateAllStatuses } = await import('../utils/paymentStatus');
-    const data = await getAppData();
-    if (data) {
-      let payments = data.payments.filter(p => p.weekStartDate !== weekStartDate);
-      // Recalculate statuses after deletion
-      payments = recalculateAllStatuses(payments);
-      await savePayments(payments);
-      onSave();
-      onClose();
+    try {
+      // Get all payments and remove this one
+      const { getAppData, savePayments } = await import('../utils/db');
+      const { recalculateAllStatuses } = await import('../utils/paymentStatus');
+      const data = await getAppData();
+      if (data) {
+        let payments = data.payments.filter(p => p.weekStartDate !== weekStartDate);
+        // Recalculate statuses after deletion
+        payments = recalculateAllStatuses(payments);
+        await savePayments(payments);
+        onSave();
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      alert('Failed to delete payment. Please try again.');
     }
   };
 
