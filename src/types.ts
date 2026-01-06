@@ -10,7 +10,7 @@ export interface WeeklyPayment {
   status: PaymentStatus;
   paymentDate: string | null; // ISO date string (Monday) or null
   amountPaid: number;
-  receiptImage: string | null; // Base64 encoded image
+  receiptImage: string | null; // Vercel Blob URL or base64 encoded image (for backward compatibility)
 }
 
 export interface LoanDetails {

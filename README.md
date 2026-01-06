@@ -58,6 +58,18 @@ The production build will be in the `dist` folder. You can preview it with:
 npm run preview
 ```
 
+### Deploying to Vercel
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+Quick start:
+1. Install dependencies: `npm install`
+2. Set up Vercel Blob storage in your Vercel project
+3. Add `BLOB_READ_WRITE_TOKEN` environment variable
+4. Deploy: `vercel --prod` or connect via GitHub
+
+The app uses Vercel Blob for receipt storage while keeping loan data local in IndexedDB.
+
 ## 📖 Usage Guide
 
 ### Onboarding Flow

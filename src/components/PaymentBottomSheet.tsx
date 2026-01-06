@@ -10,6 +10,7 @@ import { WeeklyPayment, LoanDetails } from '../types';
 import { formatDateISO, parseDateISO } from '../utils/dateUtils';
 import { updatePayment } from '../utils/db';
 import { calculatePaymentStatus } from '../utils/paymentStatus';
+import { uploadReceipt, deleteReceipt } from '../utils/blob';
 
 interface PaymentBottomSheetProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export default function PaymentBottomSheet({
   );
   const [receiptImage, setReceiptImage] = useState<string | null>(payment?.receiptImage || null);
   const [isMarkingPaid, setIsMarkingPaid] = useState(!!payment?.paymentDate);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export default function PaymentBottomSheet({
     }
   }, [isOpen, payment, weekStartDate, loanDetails]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -68,14 +70,38 @@ export default function PaymentBottomSheet({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setReceiptImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    setIsUploading(true);
+    try {
+      // Upload to Vercel Blob
+      const blobUrl = await uploadReceipt(file, weekStartDate);
+      setReceiptImage(blobUrl);
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to upload receipt');
+      // Fallback to base64 for offline/local development
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReceiptImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleDeleteReceipt = () => {
+  const handleDeleteReceipt = async () => {
+    if (!receiptImage) return;
+
+    // Delete from Vercel Blob if it's a URL
+    if (receiptImage.startsWith('http')) {
+      try {
+        await deleteReceipt(receiptImage);
+      } catch (error) {
+        console.error('Delete error:', error);
+        // Continue with local deletion even if blob delete fails
+      }
+    }
+
     setReceiptImage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -220,9 +246,10 @@ export default function PaymentBottomSheet({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full py-4 px-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 font-semibold active:bg-gray-50"
+                disabled={isUploading}
+                className="w-full py-4 px-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 font-semibold active:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                + Upload Receipt (PNG/JPEG, max 5MB)
+                {isUploading ? 'Uploading...' : '+ Upload Receipt (PNG/JPEG, max 5MB)'}
               </button>
             )}
             <input
