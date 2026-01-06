@@ -18,8 +18,32 @@ async function getBlobKey(userId: string): Promise<string> {
 
 export default async function handler(req: Request) {
   const { method } = req;
-  const { searchParams } = new URL(req.url);
-  const userId = searchParams.get('userId');
+  
+  // Parse query parameters from req.url
+  // In Vercel, req.url can be relative, so we handle both cases
+  let userId: string | null = null;
+  
+  try {
+    const urlString = req.url;
+    if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
+      // Absolute URL
+      const url = new URL(urlString);
+      userId = url.searchParams.get('userId');
+    } else {
+      // Relative URL - manually parse query string
+      const queryIndex = urlString.indexOf('?');
+      if (queryIndex !== -1) {
+        const queryString = urlString.substring(queryIndex + 1);
+        const params = new URLSearchParams(queryString);
+        userId = params.get('userId');
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing URL:', error);
+    // Fallback: try to extract userId from query string manually
+    const match = req.url.match(/[?&]userId=([^&]+)/);
+    userId = match ? decodeURIComponent(match[1]) : null;
+  }
 
   if (!userId) {
     return new Response(JSON.stringify({ error: 'User ID required' }), {
