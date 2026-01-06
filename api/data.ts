@@ -4,7 +4,7 @@
  * Stores data in Vercel Blob keyed by user ID
  */
 
-import { put, get, del } from '@vercel/blob';
+import { put, list, del } from '@vercel/blob';
 
 export const config = {
   runtime: 'nodejs',
@@ -32,16 +32,35 @@ export default async function handler(req: Request) {
 
   if (method === 'GET') {
     try {
-      // Try to get existing data
-      const blob = await get(blobKey);
-      const data = await blob.text();
+      // List blobs to find the one we need
+      const { blobs } = await list({
+        prefix: blobKey,
+        limit: 1,
+      });
+      
+      if (blobs.length === 0) {
+        // Blob doesn't exist (first time user)
+        return new Response(JSON.stringify(null), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // Fetch the blob content from its URL
+      const blob = blobs[0];
+      const response = await fetch(blob.url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch blob content');
+      }
+      
+      const data = await response.text();
       return new Response(data, {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
     } catch (error: any) {
       // If blob doesn't exist, return null (first time user)
-      if (error.status === 404 || error.message?.includes('not found')) {
+      if (error.status === 404 || error.message?.includes('not found') || error.message?.includes('404')) {
         return new Response(JSON.stringify(null), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -69,12 +88,12 @@ export default async function handler(req: Request) {
 
       // Save to Vercel Blob
       const jsonData = JSON.stringify(body);
-      await put(blobKey, jsonData, {
+      const blob = await put(blobKey, jsonData, {
         access: 'public',
         contentType: 'application/json',
       });
 
-      return new Response(JSON.stringify({ success: true }), {
+      return new Response(JSON.stringify({ success: true, url: blob.url }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -89,22 +108,38 @@ export default async function handler(req: Request) {
 
   if (method === 'DELETE') {
     try {
-      await del(blobKey);
+      // Find the blob first to get its URL
+      const { blobs } = await list({
+        prefix: blobKey,
+        limit: 1,
+      });
+      
+      if (blobs.length === 0) {
+        // Already deleted
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // Delete using the blob URL
+      await del(blobs[0].url);
+      
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
     } catch (error: any) {
       // Ignore 404 errors (already deleted)
-      if (error.status !== 404) {
-        console.error('Delete data error:', error);
-        return new Response(JSON.stringify({ error: 'Failed to delete data' }), {
-          status: 500,
+      if (error.status === 404 || error.message?.includes('not found')) {
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
           headers: { 'Content-Type': 'application/json' },
         });
       }
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
+      console.error('Delete data error:', error);
+      return new Response(JSON.stringify({ error: 'Failed to delete data' }), {
+        status: 500,
         headers: { 'Content-Type': 'application/json' },
       });
     }

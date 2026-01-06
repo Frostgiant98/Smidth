@@ -23,15 +23,23 @@ npm install
 
 ## Step 3: Configure Environment Variables
 
-Create a `.env.local` file in the root directory:
+**📖 See [ENV_SETUP.md](./ENV_SETUP.md) for detailed instructions.**
 
-```env
-BLOB_READ_WRITE_TOKEN=your_token_here
-```
+### Quick Setup:
 
-Or set it in Vercel Dashboard:
-- Go to **Project Settings** → **Environment Variables**
-- Add `BLOB_READ_WRITE_TOKEN` with your token value
+**For Local Development:**
+1. Create `.env.local` file in project root
+2. Add: `BLOB_READ_WRITE_TOKEN=your_token_here`
+3. Or run: `vercel env pull .env.local`
+
+**For Production (Vercel Dashboard):**
+1. Go to **Project Settings** → **Environment Variables**
+2. Click **Add New**
+3. Key: `BLOB_READ_WRITE_TOKEN`
+4. Value: Paste your token
+5. Select all environments (Production, Preview, Development)
+6. Click **Save**
+7. Redeploy your project
 
 ## Step 4: Deploy to Vercel
 
