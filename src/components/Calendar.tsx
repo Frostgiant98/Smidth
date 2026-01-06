@@ -7,7 +7,7 @@
  */
 
 import { LoanDetails, WeeklyPayment } from '../types';
-import { getWeekMondays, parseDateISO, formatDateISO, getWeekNumber } from '../utils/dateUtils';
+import { getWeekMondays, parseDateISO, getWeekNumber } from '../utils/dateUtils';
 import { PaymentStatus } from '../types';
 
 interface CalendarProps {
@@ -51,13 +51,6 @@ export default function Calendar({ loanDetails, payments, onWeekSelect }: Calend
     }
   };
 
-  const isPastWeek = (weekStartDate: string): boolean => {
-    const weekStart = parseDateISO(weekStartDate);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-    return today > weekEnd;
-  };
-
   const isFutureWeek = (weekStartDate: string): boolean => {
     const weekStart = parseDateISO(weekStartDate);
     return today < weekStart;
@@ -85,11 +78,10 @@ export default function Calendar({ loanDetails, payments, onWeekSelect }: Calend
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-        {mondays.map((monday, index) => {
+        {mondays.map((monday) => {
           const payment = getPaymentForWeek(monday);
           const status = payment?.status || 'UPCOMING';
           const weekNum = getWeekNumber(monday, loanDetails.loanStartDate);
-          const isPast = isPastWeek(monday);
           const isFuture = isFutureWeek(monday);
 
           return (

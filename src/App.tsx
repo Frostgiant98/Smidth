@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { getAppData, getPINHash, savePayments } from './utils/db';
 import { recalculateAllStatuses } from './utils/paymentStatus';
 import { initializePayments } from './utils/paymentInitialization';
-import { AppData, LoanDetails, WeeklyPayment } from './types';
+import { AppData } from './types';
 import PINSetup from './components/PINSetup';
 import LoanSetup from './components/LoanSetup';
 import Dashboard from './components/Dashboard';

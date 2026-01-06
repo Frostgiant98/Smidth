@@ -8,7 +8,7 @@
  */
 
 import { WeeklyPayment, PaymentStatus } from '../types';
-import { parseDateISO, getSunday } from './dateUtils';
+import { parseDateISO } from './dateUtils';
 
 /**
  * Calculate payment status for a week
